@@ -1,0 +1,103 @@
+#pragma version =0.4.6;
+#pragma allow-post-modification;
+#pragma compute-asm-ltr;
+
+#include "sample_TelegramTonTransfer.headers.fc";
+#include "sample_TelegramTonTransfer.stdlib.fc";
+#include "sample_TelegramTonTransfer.constants.fc";
+#include "sample_TelegramTonTransfer.storage.fc";
+
+;;
+;; Contract TelegramTonTransfer functions
+;;
+
+(slice, int, int) $TelegramTonTransfer$_contract_init(slice $owner) impure inline_ref {
+    var (($self'owner, $self'minAmount, $self'maxAmount)) = (null(), null(), null());
+    $self'owner = $owner;
+    $self'minAmount = 100000000;
+    $self'maxAmount = 10000000000;
+    return ($self'owner, $self'minAmount, $self'maxAmount);
+}
+
+((slice, int, int), int) $TelegramTonTransfer$_fun_balance((slice, int, int) $self) impure inline_ref {
+    var (($self'owner, $self'minAmount, $self'maxAmount)) = $self;
+    var $fresh$ret_0 = $global_myBalance();
+    return (($self'owner, $self'minAmount, $self'maxAmount), $fresh$ret_0);
+}
+
+;;
+;; Receivers of a Contract TelegramTonTransfer
+;;
+
+(((slice, int, int)), ()) $TelegramTonTransfer$_internal_binary_TransferMessage((slice, int, int) $self, (slice, int) $msg) impure inline {
+    var ($self'owner, $self'minAmount, $self'maxAmount) = $self;
+    var ($msg'recipient, $msg'amount) = $msg;
+    throw_unless(46710, ($msg'amount >= $self'minAmount));
+    throw_unless(35507, ($msg'amount <= $self'maxAmount));
+    $global_send($SendParameters$_constructor_to_value_mode_body($msg'recipient, $msg'amount, 66, __gen_cell_comment_6494d3df1b08e43712a7a4365ef523e77583071e2d06212eecbc987565e38791()));
+    return (($self'owner, $self'minAmount, $self'maxAmount), ());
+}
+
+;;
+;; Get methods of a Contract TelegramTonTransfer
+;;
+
+_ %balance() method_id(104128) {
+    var self = $TelegramTonTransfer$_contract_load();
+    var res = self~$TelegramTonTransfer$_fun_balance();
+    return res;
+}
+
+_ lazy_deployment_completed() method_id {
+    return get_data().begin_parse().load_int(1);
+}
+
+;;
+;; Routing of a Contract TelegramTonTransfer
+;;
+
+((slice, int, int), int) $TelegramTonTransfer$_contract_router_internal((slice, int, int) self, int msg_bounced, slice in_msg) impure inline_ref {
+    ;; Handle bounced messages
+    if (msg_bounced) {
+        return (self, true);
+    }
+    
+    ;; Parse incoming message
+    int op = 0;
+    if (slice_bits(in_msg) >= 32) {
+        op = in_msg.preload_uint(32);
+    }
+    
+    
+    ;; Receive TransferMessage message
+    if (op == 2361512320) {
+        var msg = in_msg~$TransferMessage$_load();
+        self~$TelegramTonTransfer$_internal_binary_TransferMessage(msg);
+        return (self, true);
+    }
+    
+    return (self, false);
+}
+
+() recv_internal(int msg_value, cell in_msg_cell, slice in_msg) impure {
+    
+    ;; Context
+    var cs = in_msg_cell.begin_parse();
+    var msg_flags = cs~load_uint(4);
+    var msg_bounced = -(msg_flags & 1);
+    slice msg_sender_addr = __tact_verify_address(cs~load_msg_addr());
+    __tact_context = (msg_bounced, msg_sender_addr, msg_value, cs);
+    __tact_context_sender = msg_sender_addr;
+    
+    ;; Load contract data
+    var self = $TelegramTonTransfer$_contract_load();
+    
+    ;; Handle operation
+    int handled = self~$TelegramTonTransfer$_contract_router_internal(msg_bounced, in_msg);
+    
+    ;; Throw if not handled
+    throw_unless(130, handled);
+    
+    ;; Persist state
+    $TelegramTonTransfer$_contract_store(self);
+}

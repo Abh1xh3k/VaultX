@@ -1,0 +1,68 @@
+;;
+;; Type: SendParameters
+;; TLB: _ bounce:bool to:address value:int257 mode:int257 body:Maybe ^cell code:Maybe ^cell data:Maybe ^cell = SendParameters
+;;
+
+((int, slice, int, int, cell, cell, cell)) $SendParameters$_constructor_to_value_mode_body(slice $to, int $value, int $mode, cell $body) inline {
+    return (true, $to, $value, $mode, $body, null(), null());
+}
+
+;;
+;; Type: TransferMessage
+;; Header: 0x8cc1d180
+;; TLB: transfer_message#8cc1d180 recipient:address amount:coins = TransferMessage
+;;
+
+(slice, ((slice, int))) $TransferMessage$_load(slice sc_0) inline {
+    throw_unless(129, sc_0~load_uint(32) == 2361512320);
+    var v'recipient = sc_0~__tact_load_address();
+    var v'amount = sc_0~load_coins();
+    return (sc_0, (v'recipient, v'amount));
+}
+
+;;
+;; Type: TelegramTonTransfer
+;;
+
+builder $TelegramTonTransfer$_store(builder build_0, (slice, int, int) v) inline {
+    var (v'owner, v'minAmount, v'maxAmount) = v;
+    build_0 = __tact_store_address(build_0, v'owner);
+    build_0 = build_0.store_coins(v'minAmount);
+    build_0 = build_0.store_coins(v'maxAmount);
+    return build_0;
+}
+
+(slice, ((slice, int, int))) $TelegramTonTransfer$_load(slice sc_0) inline {
+    var v'owner = sc_0~__tact_load_address();
+    var v'minAmount = sc_0~load_coins();
+    var v'maxAmount = sc_0~load_coins();
+    return (sc_0, (v'owner, v'minAmount, v'maxAmount));
+}
+
+(slice, ((slice))) $TelegramTonTransfer$init$_load(slice sc_0) inline {
+    var v'owner = sc_0~__tact_load_address();
+    return (sc_0, (v'owner));
+}
+
+(slice, int, int) $TelegramTonTransfer$_contract_load() impure inline_ref {
+    slice $sc = get_data().begin_parse();
+    __tact_context_sys = $sc~load_ref();
+    int $loaded = $sc~load_int(1);
+    if ($loaded) {
+        return $sc~$TelegramTonTransfer$_load();
+    } else {
+        ;; Allow only workchain deployments
+        throw_unless(137, my_address().preload_uint(11) == 1024);
+        (slice $owner) = $sc~$TelegramTonTransfer$init$_load();
+        $sc.end_parse();
+        return $TelegramTonTransfer$_contract_init($owner);
+    }
+}
+
+() $TelegramTonTransfer$_contract_store((slice, int, int) v) impure inline {
+    builder b = begin_cell();
+    b = b.store_ref(__tact_context_sys);
+    b = b.store_int(true, 1);
+    b = $TelegramTonTransfer$_store(b, v);
+    set_data(b.end_cell());
+}
